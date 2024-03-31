@@ -1,0 +1,25 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.AutoClicker" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+         <item name="colorPrimary">@color/color_primary</item>
+        <item name="android:dialogTheme">@style/dialogTheme</item>
+        <item name="fontFamily">@font/sans</item>
+    </style>
+
+    <style name="dialogTheme" parent="Theme.Material3.Light.Dialog">
+        <item name="android:colorPrimary">@color/color_primary</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@style/dialogAnimation</item>
+    </style>
+
+    <style name="dialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/dialog_in</item>
+        <item name="android:windowExitAnimation">@anim/dialog_out</item>
+    </style>
+
+    <style name="Theme.AutoClicker.AppWidget" parent="">
+        <item name="appWidgetIconColor">@color/color_primary</item>
+    </style>
+
+</resources>

@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Auto Clicker</string>
+    <string name="accessibility_service_description">The Auto Clicker app requires Accessibility service permission for clicking and swiping functionality.</string>
+    <string name="points_is_empty">حداقل یک ویجت اضافه کنید</string>
+    <string name="save">ذخیره</string>
+    <string name="click_time">زمان بین هر کلیک</string>
+    <string name="swipe_time">زمان کشیده شدن بین دو نقطه</string>
+    <string name="start_activity">شروع فعالیت</string>
+    <string name="end_activity">توقف فعالیت</string>
+    <string name="activation">فعال سازی</string>
+    <string name="permission_confirmation">تایید دسترسی</string>
+    <string name="accessibility_permission">مجوز Accessibility Service</string>
+    <string name="accessibility_permission_description">اتو کلیکر برای اجرای فعالیت کلیک و کشیدن نیاز به دسترسی Accessibility Service دارد.\nپس از فشردن دکمه ای  تایید دسترسی به بخش نصب خدمات رفته و سرویس Auto Clicker را فعال نمایید.</string>
+    <string name="later">بعدا</string>
+    <string name="synchronous_execution_of_widgets">اجرای همزمان ویجت ها</string>
+    <string name="hidden_widgets">پنهان شدن ویجت ها هنگام اجرا</string>
+    <string name="long_click_time">زمان لمس هر کلیک</string>
+    <string name="testing">آزمایش</string>
+    <string name="scripts_config">اسکریپت ها</string>
+    <string name="repeat_count">تعداد تکرار هر ویجت</string>
+    <string name="infinity">بینهایت</string>
+    <string name="maximum_duration_time">حداکثر مدت زمان</string>
+    <string name="name_cant_empty">نام نمی تواند خالی باشد</string>
+    <string name="yes">بله</string>
+    <string name="no">خیر</string>
+    <string name="do_you_want_this_script_removed">آیا می خواهید این اسکریپت حذف شود؟</string>
+    <string name="script_name">نام اسکریپت</string>
+</resources>
