@@ -2,10 +2,12 @@ package ghasemi.abbas.autoclicker.ui
 
 import android.content.Context
 import android.graphics.Color
+import android.os.Build
+import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.CallSuper
 
-open class BaseFragment {
+open class BaseFragment() {
 
     lateinit var root: FrameLayout
     var context: Context? = null
@@ -19,6 +21,10 @@ open class BaseFragment {
         if (!::root.isInitialized) {
             root = FrameLayout(context)
             root.setBackgroundColor(Color.WHITE)
+            root.isFocusable = true
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                root.focusable = View.FOCUSABLE
+            }
         }
         this.context = context
     }

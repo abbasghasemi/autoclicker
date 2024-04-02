@@ -5,7 +5,7 @@ plugins {
 
 android {
     signingConfigs {
-        getByName("debug") {
+        create("release") {
             storeFile = file(rootProject.extra["keyPath"] as String)
             storePassword = rootProject.extra["keyPassword"] as String
             keyAlias = rootProject.extra["keyAlias"] as String
@@ -19,10 +19,11 @@ android {
         applicationId = "ghasemi.abbas.autoclicker"
         minSdk = 24
         targetSdk = 34
-        versionCode = 4
-        versionName = "2.7"
+        versionCode = 31
+        versionName = "3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig = signingConfigs.getByName("release")
     }
 
     buildTypes {
@@ -32,6 +33,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            isMinifyEnabled = false
         }
     }
     compileOptions {

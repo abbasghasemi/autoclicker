@@ -2,14 +2,17 @@ package ghasemi.abbas.autoclicker.utils
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.Activity
+import android.appwidget.AppWidgetManager
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.DialogInterface
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.service.quicksettings.TileService
 import android.view.View
 import android.view.accessibility.AccessibilityManager
 import android.view.inputmethod.InputMethodManager
@@ -18,6 +21,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.text.TextUtilsCompat
 import com.google.android.material.snackbar.Snackbar
 import ghasemi.abbas.autoclicker.AppAccessibilityService
+import ghasemi.abbas.autoclicker.AppQSTileService
+import ghasemi.abbas.autoclicker.AppWidget
 import ghasemi.abbas.autoclicker.ApplicationLoader
 import kotlin.math.roundToInt
 
@@ -168,5 +173,16 @@ object AndroidUtils {
         } else {
             vibrator?.vibrate(longArrayOf(80L), -1)
         }
+    }
+
+     fun updateTileAndWidget() {
+        val appWidgetManager = AppWidgetManager.getInstance(ApplicationLoader.context)
+        for (i in appWidgetManager.getAppWidgetIds(ComponentName(ApplicationLoader.context!!, AppWidget::class.java))) {
+            AppWidget.initWidget(appWidgetManager, i)
+        }
+        TileService.requestListeningState(
+            ApplicationLoader.context,
+            ComponentName(ApplicationLoader.context!!, AppQSTileService::class.java)
+        )
     }
 }

@@ -17,6 +17,12 @@ class AppConfig private constructor(context: Context?) {
             sharedPreferences.edit().putBoolean("isDarkMode", isDark).apply()
         }
 
+    var lastPermissionConfirmed: Boolean
+        get() = sharedPreferences.getBoolean("lastPermissionConfirmed", false)
+        set(confirmed) {
+            sharedPreferences.edit().putBoolean("lastPermissionConfirmed", confirmed).apply()
+        }
+
     var scriptsConfigList: String
         get() = sharedPreferences.getString("scriptsConfigList", "")!!
         set(configList) {
@@ -25,13 +31,13 @@ class AppConfig private constructor(context: Context?) {
 
     var synchronousExecution: Boolean
         get() = sharedPreferences.getBoolean("synchronousExecution", false)
-        set(isDark) {
-            sharedPreferences.edit().putBoolean("synchronousExecution", isDark).apply()
+        set(sync) {
+            sharedPreferences.edit().putBoolean("synchronousExecution", sync).apply()
         }
     var hiddenWidgetsExecution: Boolean
         get() = sharedPreferences.getBoolean("hiddenWidgetsExecution", false)
-        set(isDark) {
-            sharedPreferences.edit().putBoolean("hiddenWidgetsExecution", isDark).apply()
+        set(hidden) {
+            sharedPreferences.edit().putBoolean("hiddenWidgetsExecution", hidden).apply()
         }
 
     var clickTime: Int
@@ -42,8 +48,8 @@ class AppConfig private constructor(context: Context?) {
 
     var clickTimeType: Int
         get() = sharedPreferences.getInt("clickTimeType", 0)
-        set(time) {
-            sharedPreferences.edit().putInt("clickTimeType", time).apply()
+        set(type) {
+            sharedPreferences.edit().putInt("clickTimeType", type).apply()
         }
 
     var longClickTime: Int
@@ -59,8 +65,8 @@ class AppConfig private constructor(context: Context?) {
         }
     var repeatCount: Int
         get() = sharedPreferences.getInt("repeatCount", 0)
-        set(time) {
-            sharedPreferences.edit().putInt("repeatCount", time).apply()
+        set(count) {
+            sharedPreferences.edit().putInt("repeatCount", count).apply()
         }
 
     // scondes

@@ -13,7 +13,7 @@ class AppService : Service() {
     override fun onCreate() {
         super.onCreate()
         serviceHelper = AppServiceHelper(this, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE)
-        serviceHelper!!.createSettings()
+        serviceHelper!!.showSettings()
     }
 
     override fun onDestroy() {

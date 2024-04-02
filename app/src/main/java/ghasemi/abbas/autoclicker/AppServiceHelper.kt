@@ -40,7 +40,6 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.util.Consumer
 import ghasemi.abbas.autoclicker.stream.SerializedData
 import ghasemi.abbas.autoclicker.ui.LauncherActivity
-import ghasemi.abbas.autoclicker.ui.ScriptsConfigActivity
 import ghasemi.abbas.autoclicker.ui.components.DurationTimeView
 import ghasemi.abbas.autoclicker.ui.components.ExpendedView
 import ghasemi.abbas.autoclicker.ui.components.LineView
@@ -210,7 +209,7 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         notifyScreenOff()
     }
 
-    fun createSettings(scriptsConfig: ScriptsConfig? = null) {
+    fun showSettings(scriptsConfig: ScriptsConfig? = null) {
         var loadConfig = false
         if (scriptsConfig != null && this.scriptsConfig != scriptsConfig) {
             this.scriptsConfig = scriptsConfig
@@ -224,7 +223,7 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         isEnabled = true
         NotificationCenter.instance()
             .postNotificationName(NotificationCenter.appServiceToggle, isEnabled)
-        updateTileAndWidget()
+        AndroidUtils.updateTileAndWidget()
         val linearLayout = LinearLayout(context)
         linearLayout.apply {
             val r = AndroidUtils.dpf(7f)
@@ -392,8 +391,8 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                     val params =
                         linearLayout.getChildAt(i).layoutParams as LinearLayout.LayoutParams
                     val tm = params.topMargin
-                    params.topMargin = params.leftMargin
-                    params.leftMargin = tm
+                    params.topMargin = params.marginStart
+                    params.marginStart = tm
                 }
             }
             linearLayout.orientation =
@@ -532,7 +531,7 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                 }
                 .setNegativeButton(R.string.scripts_config) { _: DialogInterface, _: Int ->
                     context.startActivity(Intent(context, LauncherActivity::class.java).apply {
-                        putExtra("fragment", ScriptsConfigActivity::class.java.name)
+                        putExtra("fragment", "ScriptsConfig")
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     })
                 }
@@ -630,17 +629,6 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         )
     }
 
-    private fun updateTileAndWidget() {
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        for (i in appWidgetManager.getAppWidgetIds(ComponentName(context, AppWidget::class.java))) {
-            AppWidget.initWidget(appWidgetManager, i)
-        }
-        TileService.requestListeningState(
-            context,
-            ComponentName(context, AppQSTileService::class.java)
-        )
-    }
-
     fun dismissSettings() {
         synchronized(_object) {
             alertDialog?.apply {
@@ -656,7 +644,7 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
             scriptsConfig = null
             NotificationCenter.instance()
                 .postNotificationName(NotificationCenter.appServiceToggle, isEnabled)
-            updateTileAndWidget()
+            AndroidUtils.updateTileAndWidget()
         }
     }
 

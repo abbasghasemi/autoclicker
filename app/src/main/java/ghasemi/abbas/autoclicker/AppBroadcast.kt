@@ -13,21 +13,21 @@ class AppBroadcast : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         if (AndroidUtils.isAccessibilityServiceEnabled()) {
             NotificationCenter.instance().postNotificationName(
-                if (AppServiceHelper.isEnabled) NotificationCenter.appServiceDismiss else NotificationCenter.appServiceStart
+                if (AppServiceHelper.isEnabled) NotificationCenter.appServiceStop else NotificationCenter.appServiceStart
             )
             if (intent == null) {
                 return
             }
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            AndroidUtils.runOnUIThread({
-                AppWidget.initWidget(
-                    appWidgetManager,
-                    intent.getIntExtra(
-                        AppWidgetManager.EXTRA_APPWIDGET_ID,
-                        AppWidgetManager.INVALID_APPWIDGET_ID
-                    )
-                )
-            }, 50)
+//            AndroidUtils.runOnUIThread({
+//                AppWidget.initWidget(
+//                    appWidgetManager,
+//                    intent.getIntExtra(
+//                        AppWidgetManager.EXTRA_APPWIDGET_ID,
+//                        AppWidgetManager.INVALID_APPWIDGET_ID
+//                    )
+//                )
+//            }, 50)
         } else {
             context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK

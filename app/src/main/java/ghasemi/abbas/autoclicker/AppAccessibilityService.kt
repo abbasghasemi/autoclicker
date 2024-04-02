@@ -25,7 +25,8 @@ open class AppAccessibilityService : AccessibilityService(), NotificationCenterD
         NotificationCenter.instance().addObserver(this, NotificationCenter.accessibilitySwipe)
         NotificationCenter.instance().addObserver(this, NotificationCenter.accessibilityClear)
         NotificationCenter.instance().addObserver(this, NotificationCenter.appServiceStart)
-        NotificationCenter.instance().addObserver(this, NotificationCenter.appServiceDismiss)
+        NotificationCenter.instance().addObserver(this, NotificationCenter.appServiceStop)
+        NotificationCenter.instance().postNotificationName(NotificationCenter.accessibilityConnected)
     }
 
     override fun onInterrupt() {}
@@ -34,7 +35,7 @@ open class AppAccessibilityService : AccessibilityService(), NotificationCenterD
     }
 
     override fun onUnbind(intent: Intent): Boolean {
-        destroy()
+//        destroy()
         return super.onUnbind(intent)
     }
 
@@ -48,7 +49,7 @@ open class AppAccessibilityService : AccessibilityService(), NotificationCenterD
         NotificationCenter.instance().removeObserver(this, NotificationCenter.accessibilitySwipe)
         NotificationCenter.instance().removeObserver(this, NotificationCenter.accessibilityClear)
         NotificationCenter.instance().removeObserver(this, NotificationCenter.appServiceStart)
-        NotificationCenter.instance().removeObserver(this, NotificationCenter.appServiceDismiss)
+        NotificationCenter.instance().removeObserver(this, NotificationCenter.appServiceStop)
         serviceHelper?.onDestroy()
     }
 
@@ -122,13 +123,13 @@ open class AppAccessibilityService : AccessibilityService(), NotificationCenterD
 
             NotificationCenter.appServiceStart -> {
                 if (args.isEmpty()) {
-                    serviceHelper?.createSettings()
+                    serviceHelper?.showSettings()
                 } else  {
-                    serviceHelper?.createSettings(args[0] as AppServiceHelper.ScriptsConfig)
+                    serviceHelper?.showSettings(args[0] as AppServiceHelper.ScriptsConfig)
                 }
             }
 
-            NotificationCenter.appServiceDismiss -> {
+            NotificationCenter.appServiceStop -> {
                 serviceHelper?.dismissSettings()
             }
         }

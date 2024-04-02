@@ -3,11 +3,13 @@
     <string name="accessibility_service_description">The Auto Clicker app requires Accessibility service permission for clicking and swiping functionality.</string>
     <string name="points_is_empty">حداقل یک ویجت اضافه کنید</string>
     <string name="save">ذخیره</string>
-    <string name="click_time">زمان بین هر کلیک</string>
+    <string name="click_time">زمان بین هر ویجت</string>
     <string name="swipe_time">زمان کشیده شدن بین دو نقطه</string>
     <string name="start_activity">شروع فعالیت</string>
     <string name="end_activity">توقف فعالیت</string>
     <string name="activation">فعال سازی</string>
+    <string name="deactivation">غیرفعال سازی</string>
+    <string name="app_settings">تنظیمات برنامه</string>
     <string name="permission_confirmation">تایید دسترسی</string>
     <string name="accessibility_permission">مجوز Accessibility Service</string>
     <string name="accessibility_permission_description">اتو کلیکر برای اجرای فعالیت کلیک و کشیدن نیاز به دسترسی Accessibility Service دارد.\nپس از فشردن دکمه ای  تایید دسترسی به بخش نصب خدمات رفته و سرویس Auto Clicker را فعال نمایید.</string>
@@ -25,4 +27,9 @@
     <string name="no">خیر</string>
     <string name="do_you_want_this_script_removed">آیا می خواهید این اسکریپت حذف شود؟</string>
     <string name="script_name">نام اسکریپت</string>
+    <string name="reactive_accessibility_service">درصورت وجود مشکل یکبار دسترسی Accessibility Service را غیرفعال و مجددا فعال نمایید.</string>
+    <string name="active_accessibility_service">دسترسی Accessibility Service الزامی است، لطفا آنرا فعال نمایید.</string>
+    <string name="version">نسخه %1$s</string>
+    <string name="diagnosis">عیب یابی</string>
+    <string name="allow_activity_in_background">اجازه فعالیت در پسزمینه</string>
 </resources>

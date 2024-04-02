@@ -37,11 +37,11 @@ class AppQSTileService : TileService(){
     override fun onClick() {
         if (AndroidUtils.isAccessibilityServiceEnabled()) {
             NotificationCenter.instance().postNotificationName(
-                if (AppServiceHelper.isEnabled) NotificationCenter.appServiceDismiss else NotificationCenter.appServiceStart
+                if (AppServiceHelper.isEnabled) NotificationCenter.appServiceStop else NotificationCenter.appServiceStart
             )
-            AndroidUtils.runOnUIThread({
-                updateTile()
-            }, 50)
+//            AndroidUtils.runOnUIThread({
+//                updateTile()
+//            }, 50)
         } else {
             setTheme(R.style.Theme_AutoClicker)
             showDialog(
