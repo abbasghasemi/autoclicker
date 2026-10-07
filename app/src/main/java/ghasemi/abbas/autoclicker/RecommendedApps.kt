@@ -37,7 +37,7 @@ object RecommendedApps {
             callback(parse(cached))
             return
         }
-        val endpoint = "https://farasource.com/products/v0/${context.packageName}/${BuildConfig.FLAVOR}/apps.json"
+        val endpoint = "https://farasource.ir/products/v0/${context.packageName}/${BuildConfig.FLAVOR}/apps.json"
         executor.execute {
             val result = runCatching {
                 val connection = URL(endpoint).openConnection() as HttpURLConnection
