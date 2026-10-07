@@ -18,8 +18,8 @@ android {
         applicationId = "ghasemi.abbas.autoclicker"
         minSdk = 24
         targetSdk = 37
-        versionCode = 41
-        versionName = "4.1"
+        versionCode = 42
+        versionName = "4.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         signingConfig = signingConfigs.getByName("release")

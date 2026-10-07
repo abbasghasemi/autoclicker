@@ -1,7 +1,10 @@
 package ghasemi.abbas.autoclicker
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.service.quicksettings.Tile.STATE_ACTIVE
 import android.service.quicksettings.Tile.STATE_INACTIVE
@@ -49,13 +52,24 @@ class AppQSTileService : TileService(){
                     this,
                     R.string.accessibility_permission,
                     R.string.accessibility_permission_description,
-                    R.drawable.round_settings_accessibility_24
-                ) {
-                    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    startActivity(intent)
-                }
+                    R.drawable.round_settings_accessibility_24,
+                    { launchSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS), 1) },
+                    { launchSettings(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:$packageName")), 2) }
+                )
             )
+        }
+    }
+
+    private fun launchSettings(intent: Intent, requestCode: Int) {
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (Build.VERSION.SDK_INT >= 34) {
+            val pending = PendingIntent.getActivity(this, requestCode, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            startActivityAndCollapse(pending)
+        } else {
+            @Suppress("DEPRECATION")
+            startActivityAndCollapse(intent)
         }
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startID: Int): Int {

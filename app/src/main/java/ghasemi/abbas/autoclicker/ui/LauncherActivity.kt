@@ -5,7 +5,6 @@ import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -69,6 +68,7 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
     private val backController = BackController()
     private var wating: Boolean = false
     private var created: Boolean = false
+    private var showAccessibilityGuideAfterAppInfo = false
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(ApplicationLoader.applicationCreateConfigurationContext(base))
@@ -1449,48 +1449,21 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
     }
 
     private fun accessibilityPermission() {
-        if (AppConfig.instance().lastPermissionConfirmed) {
-            requestAccessibility()
-        } else {
-            if (dialog != null && dialog!!.isShowing) {
-                return
+        if (dialog?.isShowing == true) return
+        dialog = PermissionDialog(
+            this,
+            R.string.accessibility_permission,
+            R.string.accessibility_permission_description,
+            R.drawable.round_settings_accessibility_24,
+            View.OnClickListener { requestAccessibility() },
+            View.OnClickListener {
+                showAccessibilityGuideAfterAppInfo = true
+                appSettings()
             }
-            val runnable = Runnable {
-                if ("xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)) {
-                    AlertDialog.Builder(this, R.style.AppAlertDialog)
-                        .setTitle(R.string.app_name)
-                        .setMessage("در تلفن شما ممکن است تایید دسترسی، توسط سیستم اجازه داده نشود. در این صورت گزینه 'اجازه دادن به تنظیمات محدود شده' را فعال سازی کنید.")
-                        .setPositiveButton(R.string.accessibility_permission) { _: DialogInterface, _: Int ->
-                            requestAccessibility()
-                        }
-                        .setNegativeButton(R.string.activation) { _: DialogInterface, _: Int ->
-                            appSettings()
-                        }
-                        .create().let { AppDialogUi.show(it) }
-                } else {
-                    requestAccessibility()
-                }
-            }
-            if (dialog == null) {
-                var confirm =false
-                dialog = PermissionDialog(
-                    this,
-                    R.string.accessibility_permission,
-                    R.string.accessibility_permission_description,
-                    R.drawable.round_settings_accessibility_24
-                ) {
-                    confirm = true
-                    runnable.run()
-                }
-                dialog?.setOnDismissListener {
-                   if (!confirm) dialog = null
-                }
-                dialog?.show()
-            } else {
-                runnable.run()
-            }
+        ).also {
+            it.setOnDismissListener { dialog = null }
+            it.show()
         }
-
     }
 
     private fun requestAccessibility() {
@@ -1548,6 +1521,10 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
         AndroidUtils.runOnUIThread({
             createView()
             checkFragment(intent)
+            if (showAccessibilityGuideAfterAppInfo) {
+                showAccessibilityGuideAfterAppInfo = false
+                if (!AndroidUtils.isAccessibilityServiceEnabled()) accessibilityPermission()
+            }
         })
     }
 
@@ -1570,6 +1547,10 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
     }
 
     private fun checkFragment(intent: Intent?) {
+        if (intent?.getBooleanExtra("show_accessibility_guide", false) == true) {
+            intent.removeExtra("show_accessibility_guide")
+            if (!AndroidUtils.isAccessibilityServiceEnabled()) accessibilityPermission()
+        }
         if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
             val payload = intent.getStringExtra(Intent.EXTRA_TEXT)
             intent.removeExtra(Intent.EXTRA_TEXT)

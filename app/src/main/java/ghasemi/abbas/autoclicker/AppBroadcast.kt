@@ -4,8 +4,8 @@ import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.provider.Settings
 import ghasemi.abbas.autoclicker.utils.AndroidUtils
+import ghasemi.abbas.autoclicker.ui.LauncherActivity
 
 
 class AppBroadcast : BroadcastReceiver() {
@@ -29,8 +29,9 @@ class AppBroadcast : BroadcastReceiver() {
 //                )
 //            }, 50)
         } else {
-            context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(Intent(context, LauncherActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("show_accessibility_guide", true)
             })
         }
     }

@@ -34,7 +34,9 @@
     <string name="app_settings">تنظیمات برنامه</string>
     <string name="permission_confirmation">تایید دسترسی</string>
     <string name="accessibility_permission">مجوز Accessibility Service</string>
-    <string name="accessibility_permission_description">اتو کلیکر برای اجرای فعالیت کلیک و کشیدن نیاز به دسترسی Accessibility Service دارد.\nپس از فشردن دکمه ای  تایید دسترسی به بخش نصب خدمات رفته و سرویس Auto Clicker را فعال نمایید.</string>
+    <string name="accessibility_permission_description">اتو کلیکر برای اجرای کلیک و کشیدن به دسترسی «دسترس‌پذیری» نیاز دارد. برای فعال‌سازی:\n۱. «اطلاعات برنامه» را باز کنید. اگر در منوی سه‌نقطه (بالا سمت راست یا چپ) گزینهٔ «اجازه دادن به تنظیمات محدودشده» را می‌بینید یا در آخر صفحه این گزینه غیرفعال است، آن را انتخاب و تأیید کنید. اگر چنین گزینه‌ای وجود ندارد، به مرحلهٔ بعد بروید.\n۲. به برنامه برگردید و «تنظیمات دسترس‌پذیری» را بزنید. در بخش برنامه‌های نصب‌شده، Auto Clicker را پیدا کنید و سرویس آن را روشن کنید.\n۳. پیام تأیید اندروید را بخوانید و دسترسی را تأیید کنید.</string>
+    <string name="accessibility_app_info_step">۱. اطلاعات برنامه</string>
+    <string name="accessibility_settings_step">۲. تنظیمات دسترس‌پذیری</string>
     <string name="later">بعدا</string>
     <string name="synchronous_execution_of_widgets">اجرای همزمان ویجت ها</string>
     <string name="hidden_widgets">پنهان شدن ویجت ها هنگام اجرا</string>

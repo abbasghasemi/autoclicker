@@ -3,7 +3,6 @@ package ghasemi.abbas.autoclicker.ui
 import androidx.appcompat.app.AlertDialog
 import android.content.Context
 import android.content.ClipboardManager
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -12,7 +11,6 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.text.InputFilter
 import android.text.InputType
-import android.provider.Settings
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -422,8 +420,9 @@ class ScriptsConfigActivity : BaseFragment(),
     private fun startNewScript() {
         val ctx = context ?: return
         if (!AndroidUtils.isAccessibilityServiceEnabled()) {
-            AndroidUtils.toast(ctx.getString(R.string.active_accessibility_service))
-            ctx.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            ctx.startActivity(Intent(ctx, LauncherActivity::class.java).apply {
+                putExtra("show_accessibility_guide", true)
+            })
             return
         }
         val start = {

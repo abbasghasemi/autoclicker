@@ -23,6 +23,7 @@ class PermissionDialog constructor(
     content: Int,
     logo: Int = View.NO_ID,
     click: View.OnClickListener,
+    appInfoClick: View.OnClickListener? = null,
 ) : BaseDialog(activity) {
     init {
         relativeLayout.apply {
@@ -71,7 +72,9 @@ class PermissionDialog constructor(
                     typeface = ResourcesCompat.getFont(activity, R.font.sans)
                     textSize = 15f
                     setTextColor(Color.BLACK)
-                    gravity = Gravity.CENTER
+                    gravity = Gravity.RIGHT
+                    textDirection = View.TEXT_DIRECTION_FIRST_STRONG
+                    setLineSpacing(AndroidUtils.dpf(3f), 1f)
                 }, LayoutHelper.createRelative(
                     LayoutHelper.WRAP_CONTENT,
                     LayoutHelper.WRAP_CONTENT,
@@ -84,6 +87,26 @@ class PermissionDialog constructor(
                     topId
                 )
             )
+            var buttonsBelow = centerId
+            if (appInfoClick != null) {
+                val appInfoId = View.generateViewId()
+                addView(MaterialButton(activity).apply {
+                    id = appInfoId
+                    insetBottom = 0
+                    insetTop = 0
+                    typeface = ResourcesCompat.getFont(activity, R.font.sans_bold)
+                    setText(R.string.accessibility_app_info_step)
+                    setOnClickListener {
+                        dismiss()
+                        appInfoClick.onClick(it)
+                    }
+                }, LayoutHelper.createRelative(
+                    LayoutHelper.MATCH_PARENT, 48f,
+                    15f, 0f, 15f, 10f,
+                    RelativeLayout.BELOW, centerId
+                ))
+                buttonsBelow = appInfoId
+            }
             addView(
                 LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
@@ -92,7 +115,8 @@ class PermissionDialog constructor(
                             insetBottom = 0
                             insetTop = 0
                             typeface = ResourcesCompat.getFont(activity, R.font.sans_bold)
-                            setText(R.string.permission_confirmation)
+                            setText(if (appInfoClick == null) R.string.permission_confirmation
+                                else R.string.accessibility_settings_step)
                             setOnClickListener {
                                 click.onClick(it)
                                 dismiss()
@@ -151,7 +175,7 @@ class PermissionDialog constructor(
                     LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT,
                     15f, 0f, 15f, 15f,
                     RelativeLayout.BELOW,
-                    centerId
+                    buttonsBelow
                 )
             )
         }
