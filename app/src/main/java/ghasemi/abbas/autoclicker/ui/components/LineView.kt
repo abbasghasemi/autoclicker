@@ -4,10 +4,13 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Rect
 import android.view.View
 import android.view.WindowManager
 import ghasemi.abbas.autoclicker.utils.AndroidUtils
+import ghasemi.abbas.autoclicker.GestureWaypoints
+import ghasemi.abbas.autoclicker.ScreenSize
 
 class LineView(context: Context) : View(context) {
 
@@ -24,6 +27,9 @@ class LineView(context: Context) : View(context) {
     var xToRequest = 0f
     var yFromRequest = 0f
     var yToRequest = 0f
+    var gestureMode = 0
+    var curvePercent = 0
+    var waypoints = ""
 
     init {
         paint.style = Paint.Style.STROKE
@@ -69,7 +75,36 @@ class LineView(context: Context) : View(context) {
             val height = location1[1] + heightV1 - rect.top
             val width2 = location2[0] + widthV2 - rect.left
 
-            canvas.drawLine(width, height, width2, location2[1] + heightV2 - rect.top, paint)
+            val height2 = location2[1] + heightV2 - rect.top
+            if (gestureMode == 4) {
+                val (screenWidth, screenHeight) = ScreenSize.of(context)
+                canvas.drawPath(Path().apply {
+                    moveTo(width, height)
+                    GestureWaypoints.parse(waypoints,
+                        screenWidth.toFloat(), screenHeight.toFloat()).forEach { (x, y) ->
+                        lineTo(x - rect.left, y - rect.top)
+                    }
+                    lineTo(width2, height2)
+                }, paint)
+            } else if (gestureMode == 1) {
+                val dx = width2 - width
+                val dy = height2 - height
+                val bend = curvePercent / 200f
+                canvas.drawPath(Path().apply {
+                    moveTo(width, height)
+                    quadTo((width + width2) / 2 - dy * bend,
+                        (height + height2) / 2 + dx * bend, width2, height2)
+                }, paint)
+            } else {
+                canvas.drawLine(width, height, width2, height2, paint)
+                if (gestureMode == 2) {
+                    canvas.drawLine(2 * width2 - width, 2 * height2 - height,
+                        width2, height2, paint)
+                } else if (gestureMode == 3) {
+                    canvas.drawLine(width, height, 2 * width - width2,
+                        2 * height - height2, paint)
+                }
+            }
         }
     }
 }

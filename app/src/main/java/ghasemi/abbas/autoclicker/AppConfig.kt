@@ -69,6 +69,12 @@ class AppConfig private constructor(context: Context?) {
             sharedPreferences.edit().putInt("repeatCount", count).apply()
         }
 
+    var startDelaySeconds: Int
+        get() = sharedPreferences.getInt("startDelaySeconds", 3)
+        set(seconds) {
+            sharedPreferences.edit().putInt("startDelaySeconds", seconds.coerceIn(0, 60)).apply()
+        }
+
     // scondes
     var durationTime: Long
         get() = sharedPreferences.getLong("durationTime", 0)

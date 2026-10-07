@@ -2,17 +2,20 @@ package ghasemi.abbas.autoclicker
 
 import android.accessibilityservice.AccessibilityService
 import android.app.ActivityManager
-import android.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.app.Service
 import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
+import android.content.res.ColorStateList
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Handler
@@ -26,25 +29,33 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.WindowManager
+import android.view.ContextThemeWrapper
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import android.widget.ScrollView
+import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.util.Consumer
+import androidx.appcompat.widget.AppCompatCheckBox
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import ghasemi.abbas.autoclicker.stream.SerializedData
 import ghasemi.abbas.autoclicker.ui.LauncherActivity
+import ghasemi.abbas.autoclicker.ui.AppDialogUi
 import ghasemi.abbas.autoclicker.ui.components.DurationTimeView
+import ghasemi.abbas.autoclicker.ui.components.AppChoiceButton
 import ghasemi.abbas.autoclicker.ui.components.ExpendedView
 import ghasemi.abbas.autoclicker.ui.components.LineView
 import ghasemi.abbas.autoclicker.ui.components.MoveHelper
 import ghasemi.abbas.autoclicker.ui.components.PlayPauseView
+import ghasemi.abbas.autoclicker.ui.components.ScriptTargetSelector
 import ghasemi.abbas.autoclicker.ui.components.PointView
 import ghasemi.abbas.autoclicker.utils.AndroidUtils
 import ghasemi.abbas.autoclicker.utils.AnimationUtils
@@ -55,6 +66,9 @@ import java.security.SecureRandom
 
 class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointViewMoveListener {
     companion object {
+        const val ON_LEAVE_NONE = 0
+        const val ON_LEAVE_PAUSE = 1
+        const val ON_LEAVE_STOP = 2
         const val minimumTimeClick = 10
         const val minimumSwipeClick = 300
         var isEnabled: Boolean = false
@@ -72,47 +86,40 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
             }
             val serializedData = SerializedData(Base64.decode(configList, Base64.DEFAULT))
             val version = serializedData.readInt32(false)
-            if (version == 0) {
+            if (version in 0..5) {
                 val count1 = serializedData.readInt32(false)
                 for (i in 0..<count1) {
                     val name = serializedData.readString(false)!!
                     val synchronousExecution = serializedData.readBool(false)
                     val durationTime = serializedData.readInt64(false)
+                    val relativeCoordinates = version >= 1 && serializedData.readBool(false)
+                    val referenceWidth = if (version >= 1) serializedData.readInt32(false) else 0
+                    val referenceHeight = if (version >= 1) serializedData.readInt32(false) else 0
                     val widgets = ArrayList<Widget>()
                     val count2 = serializedData.readInt32(false)
                     for (j in 0..<count2) {
                         val viewType = serializedData.readByte(false).toInt()
-                        if (viewType == 0) {
-                            widgets.add(
-                                Widget(
-                                    viewType,
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt64(false),
-                                    serializedData.readInt32(false),
-                                    0,
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt32(false),
-                                    0, 0
-                                )
-                            )
-                        } else if (viewType == 1) {
-                            widgets.add(
-                                Widget(
-                                    viewType,
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt64(false),
-                                    0,
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt32(false),
-                                    serializedData.readInt32(false),
-                                )
-                            )
+                        if (viewType == 0 || viewType == 1) {
+                            val count = serializedData.readInt32(false)
+                            val durationType = serializedData.readInt32(false)
+                            val duration = serializedData.readInt64(false)
+                            val gestureDuration = serializedData.readInt32(false)
+                            val number = serializedData.readInt32(false)
+                            val x1 = serializedData.readInt32(false)
+                            val y1 = serializedData.readInt32(false)
+                            val x2 = if (viewType == 1) serializedData.readInt32(false) else 0
+                            val y2 = if (viewType == 1) serializedData.readInt32(false) else 0
+                            val enabled = version < 2 || serializedData.readBool(false)
+                            val waitText = if (version >= 3) serializedData.readString(false).orEmpty() else ""
+                            val waitTimeoutSeconds = if (version >= 3) serializedData.readInt32(false) else 0
+                            val gestureMode = if (version >= 4) serializedData.readInt32(false) else 0
+                            val curvePercent = if (version >= 4) serializedData.readInt32(false) else 0
+                            val waypoints = if (version >= 5) serializedData.readString(false).orEmpty() else ""
+                            widgets.add(Widget(viewType, count, durationType, duration,
+                                if (viewType == 0) gestureDuration else 0,
+                                if (viewType == 1) gestureDuration else 0,
+                                number, x1, y1, x2, y2, enabled, waitText, waitTimeoutSeconds,
+                                gestureMode, curvePercent, waypoints))
                         }
                     }
                     scriptsConfig!!.add(
@@ -120,39 +127,44 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                             name,
                             synchronousExecution,
                             durationTime,
-                            widgets
+                            widgets,
+                            relativeCoordinates,
+                            referenceWidth,
+                            referenceHeight
                         )
                     )
                 }
             } else {
                 AppConfig.instance().scriptsConfigList = ""
             }
+            // Version 5 records stay intact. Older releases ignore this optional trailer.
+            ScriptOptionsTrailer.read(serializedData, scriptsConfig!!.size)?.forEachIndexed { index, options ->
+                scriptsConfig!![index].targetPackage = options.targetPackage
+                scriptsConfig!![index].onLeaveAction = options.onLeaveAction
+            }
             serializedData.cleanup()
             return scriptsConfig!!
         }
 
         fun saveScriptsConfig(scriptsConfig: ScriptsConfig, delete: Boolean = false) {
-            var found = false
+            val saved = loadScriptsConfig()
+            val existingIndex = saved.indexOfFirst { it === scriptsConfig }
             if (delete) {
-                loadScriptsConfig().remove(scriptsConfig)
-            } else {
-                for (script in loadScriptsConfig()) {
-                    if (script == scriptsConfig) {
-                        found = true
-                        break
-                    }
-                }
+                if (existingIndex >= 0) saved.removeAt(existingIndex)
             }
-            if (!found && !delete) {
-                loadScriptsConfig().add(scriptsConfig)
+            if (existingIndex < 0 && !delete) {
+                saved.add(scriptsConfig)
             }
             val serializedData = SerializedData()
-            serializedData.writeInt32(0)
+            serializedData.writeInt32(5)
             serializedData.writeInt32(loadScriptsConfig().size)
             for (script in loadScriptsConfig()) {
                 serializedData.writeString(script.name)
                 serializedData.writeBool(script.synchronousExecution)
                 serializedData.writeInt64(script.durationTime)
+                serializedData.writeBool(script.relativeCoordinates)
+                serializedData.writeInt32(script.referenceWidth)
+                serializedData.writeInt32(script.referenceHeight)
                 serializedData.writeInt32(script.widgets.size)
                 for (widget in script.widgets) {
                     serializedData.writeByte(widget.type)
@@ -171,8 +183,17 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                         serializedData.writeInt32(widget.x2)
                         serializedData.writeInt32(widget.y2)
                     }
+                    serializedData.writeBool(widget.enabled)
+                    serializedData.writeString(widget.waitText)
+                    serializedData.writeInt32(widget.waitTimeoutSeconds)
+                    serializedData.writeInt32(widget.gestureMode)
+                    serializedData.writeInt32(widget.curvePercent)
+                    serializedData.writeString(widget.waypoints)
                 }
             }
+            ScriptOptionsTrailer.write(serializedData, loadScriptsConfig().map {
+                ScriptOptionsTrailer.Options(it.targetPackage, it.onLeaveAction)
+            })
             AppConfig.instance().scriptsConfigList =
                 Base64.encodeToString(serializedData.toByteArray(), Base64.DEFAULT)
             serializedData.cleanup()
@@ -199,6 +220,10 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
     private val settingsButtons: ArrayList<View> = ArrayList(7)
     private var timeToExit = 0L
     private var thread: AppThread? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var countdownRunnable: Runnable? = null
+    private var countdownLabel: TextView? = null
+    private var emergencyStopButton: ImageView? = null
     private val _object = Object()
     private val random = SecureRandom()
     private val size = AndroidUtils.dp(40f)
@@ -211,12 +236,12 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
 
     fun showSettings(scriptsConfig: ScriptsConfig? = null) {
         var loadConfig = false
-        if (scriptsConfig != null && this.scriptsConfig != scriptsConfig) {
+        if (scriptsConfig != null) {
             this.scriptsConfig = scriptsConfig
             loadConfig = true
         }
         if (isEnabled) {
-            if (loadConfig)
+            if (loadConfig && !isRunning)
                 loadScriptConfig()
             return
         }
@@ -257,6 +282,22 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         }
         linearLayout.addView(playStop, LayoutHelper.createLinear(32f, 32f))
         settingsButtons.add(playStop)
+
+        emergencyStopButton = ImageView(context).apply {
+            setImageResource(R.drawable.round_exit_to_app_24)
+            contentDescription = context.getString(R.string.stop_now)
+            setColorFilter(Color.RED)
+            background = rippleBackground()
+            visibility = View.GONE
+            setOnClickListener { if (isRunning || countdownRunnable != null) startStopWorker() }
+        }
+        linearLayout.addView(emergencyStopButton, LayoutHelper.createLinear(32f, 32f))
+        countdownLabel = TextView(context).apply {
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            visibility = View.GONE
+        }
+        linearLayout.addView(countdownLabel, LayoutHelper.createLinear(32f, 32f))
 
         val add = ImageView(context)
         add.setImageResource(R.drawable.round_add_24)
@@ -457,26 +498,41 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
     }
 
     private fun openSettingsDialog() {
-        val etName = EditText(context)
+        val context = ContextThemeWrapper(this.context, R.style.AppAlertDialog)
+        val etName = TextInputEditText(context)
         val durationTimeView = DurationTimeView(context)
+        val targetSelector = ScriptTargetSelector(context, scriptsConfig?.targetPackage.orEmpty(),
+            scriptsConfig?.onLeaveAction ?: ON_LEAVE_NONE, type)
         var durationTime: Long = scriptsConfig?.durationTime
             ?: AppConfig.instance().durationTime
-        val cbSynchronous = CheckBox(context)
+        val cbSynchronous = AppCompatCheckBox(context).apply {
+            typeface = ResourcesCompat.getFont(context, R.font.sans)
+            useServiceCheckColors()
+        }
+        val cbRelative = AppCompatCheckBox(context).apply {
+            setText(R.string.relative_coordinates)
+            isChecked = scriptsConfig?.relativeCoordinates ?: false
+            typeface = ResourcesCompat.getFont(context, R.font.sans)
+            useServiceCheckColors()
+        }
         alertDialog =
-            AlertDialog.Builder(context, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
+            AlertDialog.Builder(context, R.style.AppAlertDialog)
                 .setTitle(R.string.app_name)
-                .setView(LinearLayout(context).apply {
+                .setView(ScrollView(context).apply { addView(LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
-                    etName.setHint(R.string.script_name)
                     durationTimeView.consumer = Consumer {
                         durationTime = it
                     }
                     durationTimeView.updateDurationTime(durationTime)
                     addView(
-                        etName.apply {
-                            value = scriptsConfig?.name ?: "Script ${loadScriptsConfig().size + 1}"
-                            filters = arrayOf(InputFilter.LengthFilter(32))
-                            typeface = ResourcesCompat.getFont(context, R.font.sans)
+                        TextInputLayout(context).apply {
+                            useServiceFieldColors()
+                            setHint(R.string.script_name)
+                            addView(etName.apply {
+                                value = scriptsConfig?.name ?: "Script ${loadScriptsConfig().size + 1}"
+                                filters = arrayOf(InputFilter.LengthFilter(32))
+                                typeface = ResourcesCompat.getFont(context, R.font.sans)
+                            })
                         },
                         LayoutHelper.createLinear(
                             LayoutHelper.MATCH_PARENT,
@@ -486,6 +542,11 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                             15f,
                             0f
                         )
+                    )
+                    addView(
+                        targetSelector,
+                        LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT,
+                            15f, 8f, 15f, 0f)
                     )
                     addView(
                         TextView(context).apply {
@@ -515,15 +576,19 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                             isChecked = scriptsConfig?.synchronousExecution
                                 ?: AppConfig.instance().synchronousExecution
                         },
-                        LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 40f, 15f, 0f, 15f, 20f)
+                        LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 40f, 15f, 0f, 15f, 0f)
                     )
-                })
+                    addView(cbRelative, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 40f, 15f, 0f, 15f, 0f))
+                }) })
                 .setPositiveButton(R.string.save) { _: DialogInterface, _: Int ->
                     if (etName.text.toString().isNotEmpty()) {
                         saveScriptConfig(
                             etName.text.toString(),
                             cbSynchronous.isChecked,
-                            durationTime
+                            durationTime,
+                            cbRelative.isChecked,
+                            targetSelector.targetPackage,
+                            targetSelector.onLeaveAction
                         )
                     } else {
                         AndroidUtils.toast(context.getString(R.string.name_cant_empty))
@@ -536,16 +601,8 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                     })
                 }
                 .create()
-        val layoutParams = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
-            type,
-            WindowManager.LayoutParams.FLAG_DIM_BEHIND,
-            PixelFormat.TRANSLUCENT
-        )
         try {
-            alertDialog!!.window!!.attributes = layoutParams
-            alertDialog!!.show()
+            AppDialogUi.show(alertDialog!!, type)
         } catch (e: Exception) {
             //
         }
@@ -573,12 +630,21 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
 
     private fun loadScriptConfig() {
         removeAllWidgets()
+        val (screenWidth, screenHeight) = ScreenSize.of(context)
+        val scaleX = if (scriptsConfig!!.relativeCoordinates && scriptsConfig!!.referenceWidth > 0)
+            screenWidth.toFloat() / scriptsConfig!!.referenceWidth else 1f
+        val scaleY = if (scriptsConfig!!.relativeCoordinates && scriptsConfig!!.referenceHeight > 0)
+            screenHeight.toFloat() / scriptsConfig!!.referenceHeight else 1f
         for (widget in scriptsConfig!!.widgets) {
-            addButton(widget)
+            addButton(widget.copy(
+                x1 = (widget.x1 * scaleX).toInt(), y1 = (widget.y1 * scaleY).toInt(),
+                x2 = (widget.x2 * scaleX).toInt(), y2 = (widget.y2 * scaleY).toInt()
+            ))
         }
     }
 
-    private fun saveScriptConfig(name: String, synchronousExecution: Boolean, durationTime: Long) {
+    private fun saveScriptConfig(name: String, synchronousExecution: Boolean, durationTime: Long,
+        relativeCoordinates: Boolean, targetPackage: String, onLeaveAction: Int) {
         val newScript = scriptsConfig == null
         if (newScript) {
             scriptsConfig = ScriptsConfig()
@@ -586,6 +652,12 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         scriptsConfig!!.name = name
         scriptsConfig!!.synchronousExecution = synchronousExecution
         scriptsConfig!!.durationTime = durationTime
+        scriptsConfig!!.relativeCoordinates = relativeCoordinates
+        scriptsConfig!!.targetPackage = targetPackage
+        scriptsConfig!!.onLeaveAction = onLeaveAction
+        val (screenWidth, screenHeight) = ScreenSize.of(context)
+        scriptsConfig!!.referenceWidth = screenWidth
+        scriptsConfig!!.referenceHeight = screenHeight
         scriptsConfig!!.widgets = ArrayList()
         for (widget in widgets) {
             if (widget.view is PointView) {
@@ -600,7 +672,8 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                         widget.view.number,
                         widget.params.x,
                         widget.params.y,
-                        0, 0
+                        0, 0, widget.enabled, widget.waitText, widget.waitTimeoutSeconds,
+                        widget.gestureMode, widget.curvePercent, widget.waypoints
                     )
                 )
             } else if (widget.view is LineView) {
@@ -617,6 +690,8 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                         widget.view.params1!!.y,
                         widget.view.params2!!.x,
                         widget.view.params2!!.y,
+                        widget.enabled, widget.waitText, widget.waitTimeoutSeconds,
+                        widget.gestureMode, widget.curvePercent, widget.waypoints
                     )
                 )
             }
@@ -625,12 +700,13 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         NotificationCenter.instance().postNotificationName(
             NotificationCenter.scriptsSaved,
             newScript,
-            loadScriptsConfig().indexOf(scriptsConfig)
+            loadScriptsConfig().indexOfFirst { it === scriptsConfig }
         )
     }
 
     fun dismissSettings() {
         synchronized(_object) {
+            cancelCountdown()
             alertDialog?.apply {
                 if (isShowing) {
                     dismiss()
@@ -642,6 +718,8 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
             removeAllWidgets(true)
             isEnabled = false
             scriptsConfig = null
+            emergencyStopButton = null
+            countdownLabel = null
             NotificationCenter.instance()
                 .postNotificationName(NotificationCenter.appServiceToggle, isEnabled)
             AndroidUtils.updateTileAndWidget()
@@ -656,14 +734,52 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         windowManager?.removeView(pointHolder.view)
     }
 
-    private fun startStopWorker() {
+    private fun cancelCountdown() {
+        countdownRunnable?.let(mainHandler::removeCallbacks)
+        countdownRunnable = null
+        countdownLabel?.visibility = View.GONE
+        emergencyStopButton?.visibility = if (isRunning) View.VISIBLE else View.GONE
+    }
+
+    private fun startStopWorker(skipCountdown: Boolean = false) {
+        if (countdownRunnable != null) {
+            cancelCountdown()
+            return
+        }
+        if (!isRunning && !skipCountdown && AppConfig.instance().startDelaySeconds > 0) {
+            if (widgets.drop(1).none { it.enabled }) {
+                AndroidUtils.toast(context.getString(R.string.points_is_empty))
+                return
+            }
+            var seconds = AppConfig.instance().startDelaySeconds
+            val tick = object : Runnable {
+                override fun run() {
+                    if (!isEnabled) { cancelCountdown(); return }
+                    if (seconds == 0) {
+                        countdownRunnable = null
+                        countdownLabel?.visibility = View.GONE
+                        startStopWorker(skipCountdown = true)
+                    } else {
+                        countdownLabel?.text = seconds.toString()
+                        countdownLabel?.visibility = View.VISIBLE
+                        emergencyStopButton?.visibility = View.VISIBLE
+                        seconds--
+                        mainHandler.postDelayed(this, 1000)
+                    }
+                }
+            }
+            countdownRunnable = tick
+            tick.run()
+            return
+        }
         val playStop = settingsButtons[0] as PlayPauseView
         NotificationCenter.instance().postNotificationName(NotificationCenter.accessibilityClear)
-        if (!isRunning && widgets.size == 1) {
+        if (!isRunning && widgets.drop(1).none { it.enabled }) {
             AndroidUtils.toast(context.getString(R.string.points_is_empty))
             return
         }
         isRunning = !isRunning
+        emergencyStopButton?.visibility = if (isRunning) View.VISIBLE else View.GONE
         if (isRunning) {
             playStop.setState(PlayPauseView.STATE_PLAY)
         } else {
@@ -769,6 +885,7 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         prams.y = widget.y1
         val pointView = PointView(context)
         pointView.number = widget.number
+        pointView.alpha = if (widget.enabled) 1f else 0.4f
         val durationType = widget.durationType
         val duration = widget.duration
         pointView.pointViewMoveListener = this
@@ -819,6 +936,12 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                     widget.longDuration,
                     0,
                     widget.count,
+                    enabled = widget.enabled,
+                    waitText = widget.waitText,
+                    waitTimeoutSeconds = widget.waitTimeoutSeconds,
+                    gestureMode = widget.gestureMode,
+                    curvePercent = widget.curvePercent,
+                    waypoints = widget.waypoints,
                 )
             )
             windowManager!!.addView(pointView, prams)
@@ -837,6 +960,7 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
             val pointView2 = PointView(context)
             pointView2.isEnd = true
             pointView2.number = widget.number
+            pointView2.alpha = if (widget.enabled) 1f else 0.4f
             pointView2.pointViewMoveListener = this
             pointView2.setOnClickListener {
                 openWidgetDialog(pointView)
@@ -853,6 +977,9 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
             prams2.y = widget.y2
 
             val lineView = LineView(context)
+            lineView.gestureMode = widget.gestureMode
+            lineView.curvePercent = widget.curvePercent
+            lineView.waypoints = widget.waypoints
             lineView.onAddView(
                 pointView, prams,
                 pointView2, prams2,
@@ -866,6 +993,12 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                     0,
                     widget.swipeDuration,
                     widget.count,
+                    enabled = widget.enabled,
+                    waitText = widget.waitText,
+                    waitTimeoutSeconds = widget.waitTimeoutSeconds,
+                    gestureMode = widget.gestureMode,
+                    curvePercent = widget.curvePercent,
+                    waypoints = widget.waypoints,
                 )
             )
             windowManager!!.addView(pointView, prams)
@@ -875,6 +1008,7 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
     }
 
     private fun openWidgetDialog(view: View) {
+        val context = ContextThemeWrapper(this.context, R.style.AppAlertDialog)
         var widgetHolder: WidgetHolder? = null
         var durationType = 0
         var swipe = false
@@ -895,22 +1029,8 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         if (widgetHolder == null) return
         val root = LinearLayout(context)
         root.orientation = LinearLayout.VERTICAL
-        root.addView(
-            TextView(context).apply {
-                setText(R.string.click_time)
-                textSize = 16f
-                setTextColor(Color.BLACK)
-                inputType = InputType.TYPE_CLASS_NUMBER
-                filters = arrayOf(InputFilter.LengthFilter(4))
-            },
-            LayoutHelper.createLinear(
-                LayoutHelper.MATCH_PARENT,
-                LayoutHelper.WRAP_CONTENT,
-                15f, 5f, 15f, 10f
-            )
-        )
-        val etClickTime = EditText(context)
-        etClickTime.hint = minimumTimeClick.toString()
+        val etClickTime = TextInputEditText(context)
+        etClickTime.backgroundTintList = ColorStateList.valueOf(0xff0a9a58.toInt())
         etClickTime.value = when (durationType) {
             0 -> widgetHolder.duration
             1 -> widgetHolder.duration / 1000
@@ -918,75 +1038,48 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         }.toString()
         etClickTime.inputType = InputType.TYPE_CLASS_NUMBER
         etClickTime.filters = arrayOf(InputFilter.LengthFilter(4))
-        root.addView(
-            LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                addView(
-                    Spinner(context).apply {
-                        adapter = ArrayAdapter(
-                            context,
-                            android.R.layout.simple_dropdown_item_1line,
-                            arrayOf("میلی ثانیه", "ثانیه", "دقیقه")
-                        )
-                        setSelection(durationType, false)
-                        onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                            override fun onItemSelected(
-                                parent: AdapterView<*>?,
-                                view: View?,
-                                position: Int,
-                                id: Long
-                            ) {
-                                durationType = position
-                            }
-
-                            override fun onNothingSelected(parent: AdapterView<*>?) {
-
-                            }
-                        }
-                    },
-                    LayoutHelper.createLinear(
-                        LayoutHelper.WRAP_CONTENT,
-                        LayoutHelper.WRAP_CONTENT,
-                        Gravity.CENTER_VERTICAL
-                    )
-                )
-                addView(
-                    etClickTime,
-                    LayoutHelper.createLinear(
-                        0f,
-                        LayoutHelper.WRAP_CONTENT,
-                        1f,
-                        Gravity.CENTER_VERTICAL
-                    )
-                )
-            },
-            LayoutHelper.createLinear(
-                LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT,
-                15f, 0f, 15f, 0f
-            )
-        )
-
-        root.addView(
-            TextView(context).apply {
-                setText(if (swipe) R.string.swipe_time else R.string.long_click_time)
-                textSize = 16f
-                setTextColor(Color.BLACK)
-            },
-            LayoutHelper.createLinear(
-                LayoutHelper.MATCH_PARENT,
-                LayoutHelper.WRAP_CONTENT,
-                15f, 5f, 15f, 5f
-            )
-        )
-
-        val etTime = EditText(context)
-        etTime.hint = if (swipe) minimumSwipeClick.toString() else "1"
+        val timeUnitNames = arrayOf("میلی ثانیه", "ثانیه", "دقیقه")
+        root.addView(TextInputLayout(context).apply {
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setHint(R.string.click_time)
+            defaultHintTextColor = ColorStateList.valueOf(0xff326b4d.toInt())
+            hintTextColor = ColorStateList.valueOf(0xff087344.toInt())
+            suffixText = timeUnitNames[durationType]
+            suffixTextView.apply {
+                setTextColor(0xff087344.toInt())
+                textSize = 12f
+                background = RippleDrawable(ColorStateList.valueOf(0x220a9a58), null,
+                    GradientDrawable().apply {
+                        setColor(Color.WHITE)
+                        cornerRadius = AndroidUtils.dp(6f).toFloat()
+                    })
+                setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    R.drawable.round_arrow_drop_down_24, 0, 0, 0)
+                isClickable = true
+                setOnClickListener {
+                    AppChoiceButton.showMenu(this, timeUnitNames, type) { index ->
+                        durationType = index
+                        suffixText = timeUnitNames[index]
+                    }
+                }
+            }
+            addView(etClickTime)
+        }, LayoutHelper.createLinear(
+            LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT,
+            15f, 8f, 15f, 0f
+        ))
+        val etTime = TextInputEditText(context)
         etTime.value =
             (if (swipe) widgetHolder.swipeDuration else widgetHolder.longDuration).toString()
         etTime.inputType = InputType.TYPE_CLASS_NUMBER
         etTime.filters = arrayOf(InputFilter.LengthFilter(4))
         root.addView(
-            etTime,
+            TextInputLayout(context).apply {
+                useServiceFieldColors()
+                setHint(if (swipe) R.string.swipe_time else R.string.long_click_time)
+                placeholderText = if (swipe) minimumSwipeClick.toString() else "1"
+                addView(etTime)
+            },
             LayoutHelper.createLinear(
                 LayoutHelper.MATCH_PARENT,
                 LayoutHelper.WRAP_CONTENT,
@@ -997,25 +1090,17 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
             )
         )
 
-        root.addView(
-            TextView(context).apply {
-                setText(R.string.repeat_count)
-                textSize = 16f
-                setTextColor(Color.BLACK)
-            },
-            LayoutHelper.createLinear(
-                LayoutHelper.MATCH_PARENT,
-                LayoutHelper.WRAP_CONTENT,
-                15f, 5f, 15f, 5f
-            )
-        )
-        val etCount = EditText(context)
-        etCount.hint = "0 (${context.resources.getString(R.string.infinity)})"
+        val etCount = TextInputEditText(context)
         etCount.value = widgetHolder.count.toString()
         etCount.inputType = InputType.TYPE_CLASS_NUMBER
         etCount.filters = arrayOf(InputFilter.LengthFilter(4))
         root.addView(
-            etCount,
+            TextInputLayout(context).apply {
+                useServiceFieldColors()
+                setHint(R.string.repeat_count)
+                placeholderText = "0 (${context.resources.getString(R.string.infinity)})"
+                addView(etCount)
+            },
             LayoutHelper.createLinear(
                 LayoutHelper.MATCH_PARENT,
                 LayoutHelper.WRAP_CONTENT,
@@ -1025,11 +1110,67 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                 20f
             )
         )
+        val enabledCheck = AppCompatCheckBox(context).apply {
+            setText(R.string.step_enabled)
+            isChecked = widgetHolder.enabled
+            useServiceCheckColors()
+        }
+        root.addView(enabledCheck,
+            LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 40f, 15f, 0f, 15f, 10f))
+        val etWaitText = TextInputEditText(context).apply {
+            setText(widgetHolder.waitText)
+            isSingleLine = true
+        }
+        root.addView(TextInputLayout(context).apply {
+            useServiceFieldColors()
+            setHint(R.string.wait_for_text)
+            addView(etWaitText)
+        }, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT,
+            LayoutHelper.WRAP_CONTENT, 15f, 0f, 15f, 10f))
+        val etWaitTimeout = TextInputEditText(context).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText(widgetHolder.waitTimeoutSeconds.toString())
+        }
+        root.addView(TextInputLayout(context).apply {
+            useServiceFieldColors()
+            setHint(R.string.wait_timeout)
+            addView(etWaitTimeout)
+        }, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT,
+            LayoutHelper.WRAP_CONTENT, 15f, 0f, 15f, 10f))
+        var gestureMode = widgetHolder.gestureMode
+        val curveSeek = SeekBar(context).apply {
+            max = 200
+            progress = widgetHolder.curvePercent + 100
+            progressTintList = ColorStateList.valueOf(0xff0a9a58.toInt())
+            thumbTintList = ColorStateList.valueOf(0xff0a9a58.toInt())
+            visibility = if (gestureMode == 1) View.VISIBLE else View.GONE
+        }
+        val etWaypoints = TextInputEditText(context).apply {
+            setText(widgetHolder.waypoints)
+        }
+        val waypointsLayout = TextInputLayout(context).apply {
+            useServiceFieldColors()
+            setHint(R.string.waypoints_hint)
+            addView(etWaypoints)
+            visibility = if (gestureMode == 4) View.VISIBLE else View.GONE
+        }
+        if (swipe) {
+            root.addView(AppChoiceButton(context,
+                context.resources.getStringArray(R.array.gesture_modes), gestureMode,
+                context.getString(R.string.gesture_mode), type) { position ->
+                gestureMode = position
+                curveSeek.visibility = if (position == 1) View.VISIBLE else View.GONE
+                waypointsLayout.visibility = if (position == 4) View.VISIBLE else View.GONE
+            }, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48f, 15f, 0f, 15f, 0f))
+            root.addView(curveSeek, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48f, 15f, 0f, 15f, 10f))
+            root.addView(waypointsLayout, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT,
+                LayoutHelper.WRAP_CONTENT, 15f, 0f, 15f, 10f))
+        }
 
         alertDialog =
-            AlertDialog.Builder(context, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
+            AlertDialog.Builder(context, R.style.AppAlertDialog)
                 .setTitle(R.string.app_name)
-                .setView(root)
+                .setView(ScrollView(context).apply { addView(root) })
                 .setPositiveButton(R.string.save) { _: DialogInterface, _: Int ->
                     val minimumTimeClick = if (durationType == 0) minimumTimeClick else 1
                     val clickTime: Long =
@@ -1050,17 +1191,26 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                     }
                     widgetHolder.count =
                         if (etCount.value.isEmpty() || etCount.value.toLong() < 0) 0 else etCount.value.toInt()
+                    widgetHolder.enabled = enabledCheck.isChecked
+                    widgetHolder.waitText = etWaitText.text.toString().trim()
+                    widgetHolder.waitTimeoutSeconds = etWaitTimeout.text.toString().toIntOrNull()?.coerceAtLeast(0) ?: 0
+                    widgetHolder.gestureMode = gestureMode
+                    widgetHolder.curvePercent = curveSeek.progress - 100
+                    widgetHolder.waypoints = etWaypoints.text.toString().trim()
+                    if (widgetHolder.view is LineView) {
+                        val line = widgetHolder.view as LineView
+                        line.gestureMode = gestureMode
+                        line.curvePercent = widgetHolder.curvePercent
+                        line.waypoints = widgetHolder.waypoints
+                        line.invalidate()
+                        line.view1?.alpha = if (widgetHolder.enabled) 1f else 0.4f
+                        line.view2?.alpha = if (widgetHolder.enabled) 1f else 0.4f
+                    } else {
+                        widgetHolder.view.alpha = if (widgetHolder.enabled) 1f else 0.4f
+                    }
                 }.create()
-        val layoutParams = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
-            type,
-            WindowManager.LayoutParams.FLAG_DIM_BEHIND,
-            PixelFormat.TRANSLUCENT
-        )
         try {
-            alertDialog!!.window!!.attributes = layoutParams
-            alertDialog!!.show()
+            AppDialogUi.show(alertDialog!!, type)
         } catch (e: Exception) {
             //
         }
@@ -1149,6 +1299,13 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         var count: Int = 0,
         var timer: Long = 0,
         var counter: Int = 0,
+        var enabled: Boolean = true,
+        var waitText: String = "",
+        var waitTimeoutSeconds: Int = 0,
+        var waitingSince: Long = 0,
+        var gestureMode: Int = 0,
+        var curvePercent: Int = 0,
+        var waypoints: String = "",
     )
 
     data class ScriptsConfig(
@@ -1156,6 +1313,11 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         var synchronousExecution: Boolean = false,
         var durationTime: Long = 0,
         var widgets: ArrayList<Widget> = ArrayList(),
+        var relativeCoordinates: Boolean = false,
+        var referenceWidth: Int = 0,
+        var referenceHeight: Int = 0,
+        var targetPackage: String = "",
+        var onLeaveAction: Int = ON_LEAVE_NONE,
     )
 
     data class Widget(
@@ -1170,6 +1332,12 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         val y1: Int,
         val x2: Int,
         val y2: Int,
+        val enabled: Boolean = true,
+        val waitText: String = "",
+        val waitTimeoutSeconds: Int = 0,
+        val gestureMode: Int = 0,
+        val curvePercent: Int = 0,
+        val waypoints: String = "",
     )
 
     inner class AppThread : Thread() {
@@ -1180,7 +1348,7 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         private val durationTime =
             (scriptsConfig?.durationTime ?: AppConfig.instance().durationTime) * 1000
         private var realTime = 0L
-        private var widgetActiveCount = widgets.size -1
+        private var widgetActiveCount = widgets.drop(1).count { it.enabled }
         private lateinit var handler : Handler
 
         override fun run() {
@@ -1188,6 +1356,7 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
             for (i in 1..<widgets.size) {
                 widgets[i].timer = 0
                 widgets[i].counter = 0
+                widgets[i].waitingSince = 0
             }
             sleep(110)
             Looper.prepare()
@@ -1205,9 +1374,11 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                 for (index in 1..<widgets.size) {
                     val viewHolder = widgets[index]
                     if (viewHolder.timer < 1) {
-                        if (runWidget(viewHolder)) {
-                            viewHolder.timer =
+                        when (runWidget(viewHolder)) {
+                            true -> viewHolder.timer =
                                 viewHolder.duration + viewHolder.swipeDuration + viewHolder.longDuration
+                            null -> viewHolder.timer = 250
+                            false -> Unit
                         }
                         continue
                     }
@@ -1223,17 +1394,36 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
         private fun doWhile() {
             handler.post {
                 widgets[widgetIndex].apply {
-                    if (runWidget(this)) {
-                        next(duration + swipeDuration + longDuration)
-                    } else {
-                        next(0)
+                    when (runWidget(this)) {
+                        true -> next(duration + swipeDuration + longDuration)
+                        false -> next(0)
+                        null -> {
+                            duration(250)
+                            if (isLive()) doWhile()
+                        }
                     }
                 }
             }
         }
 
-        private fun runWidget(widgetHolder: WidgetHolder): Boolean {
+        private fun runWidget(widgetHolder: WidgetHolder): Boolean? {
+            if (!liveStatus || !isRunning || !waitForTargetApp()) return false
+            if (!widgetHolder.enabled) return false
             if (widgetHolder.counter == -1) return false
+            if (widgetHolder.waitText.isNotBlank()) {
+                if (!AppAccessibilityService.hasVisibleText(widgetHolder.waitText)) {
+                    if (widgetHolder.waitingSince == 0L)
+                        widgetHolder.waitingSince = System.currentTimeMillis()
+                    val timeout = widgetHolder.waitTimeoutSeconds * 1000L
+                    if (timeout == 0L || System.currentTimeMillis() - widgetHolder.waitingSince < timeout)
+                        return null
+                    widgetHolder.counter = -1
+                    widgetActiveCount--
+                    if (widgetActiveCount == 0) cancel()
+                    return false
+                }
+                widgetHolder.waitingSince = 0
+            }
             if (widgetHolder.count != 0) {
                 if (widgetHolder.counter >= widgetHolder.count) {
                     widgetActiveCount--
@@ -1263,12 +1453,40 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
                             NotificationCenter.accessibilitySwipe,
                             xFromRequest, yFromRequest,
                             xToRequest, yToRequest,
-                            widgetHolder.swipeDuration.toLong()
+                            widgetHolder.swipeDuration.toLong(),
+                            widgetHolder.gestureMode, widgetHolder.curvePercent,
+                            widgetHolder.waypoints
                         )
                     }
                 }
             }
             return true
+        }
+
+        private fun waitForTargetApp(): Boolean {
+            val target = scriptsConfig?.targetPackage.orEmpty()
+            val action = scriptsConfig?.onLeaveAction ?: ON_LEAVE_NONE
+            if (target.isBlank() || action == ON_LEAVE_NONE) return true
+            val pausedAt = System.currentTimeMillis()
+            var paused = false
+            while (liveStatus && isRunning &&
+                AppAccessibilityService.foregroundPackage != target) {
+                paused = true
+                if (action == ON_LEAVE_STOP) {
+                    cancel()
+                    return false
+                }
+                try {
+                    sleep(200)
+                } catch (_: InterruptedException) {
+                    return false
+                }
+            }
+            if (paused && liveStatus && isRunning) {
+                val pauseDuration = System.currentTimeMillis() - pausedAt
+                widgets.drop(1).forEach { if (it.waitingSince > 0) it.waitingSince += pauseDuration }
+            }
+            return liveStatus && isRunning
         }
 
         private fun next(duration: Long) {
@@ -1323,4 +1541,20 @@ class AppServiceHelper(val context: Service, val type: Int) : MoveHelper.PointVi
             }
         }
     }
+}
+
+private fun TextInputLayout.useServiceFieldColors() {
+    boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+    boxStrokeColor = 0xff0a9a58.toInt()
+    boxBackgroundColor = 0xfff5fff8.toInt()
+    defaultHintTextColor = ColorStateList.valueOf(0xff326b4d.toInt())
+    hintTextColor = ColorStateList.valueOf(0xff087344.toInt())
+}
+
+private fun AppCompatCheckBox.useServiceCheckColors() {
+    buttonTintList = ColorStateList(
+        arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
+        intArrayOf(0xff0a9a58.toInt(), 0xff555555.toInt())
+    )
+    setTextColor(Color.BLACK)
 }

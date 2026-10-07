@@ -7,7 +7,7 @@ import ghasemi.abbas.autoclicker.utils.AndroidUtils.runOnUIThread
 
 class NotificationCenter {
     @Retention(AnnotationRetention.SOURCE)
-    @IntDef(accessibilityConnected,accessibilityClick, accessibilitySwipe, accessibilityClear, appServiceStart, appServiceStop,appServiceToggle,scriptsSaved)
+    @IntDef(accessibilityConnected,accessibilityClick, accessibilitySwipe, accessibilityClear, appServiceStart, appServiceStop,appServiceToggle,scriptsSaved,previewStep)
     annotation class EventID
 
     private val observers = SparseArray<ArrayList<NotificationCenterDelegate>>()
@@ -58,6 +58,7 @@ class NotificationCenter {
         const val appServiceStop = 5
         const val appServiceToggle = 6
         const val scriptsSaved = 7
+        const val previewStep = 8
         private var notificationCenter: NotificationCenter? = null
 
         fun instance(): NotificationCenter {

@@ -8,6 +8,7 @@ import android.graphics.drawable.shapes.RoundRectShape
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.view.Window
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import ghasemi.abbas.autoclicker.utils.AndroidUtils
@@ -43,5 +44,18 @@ open class BaseDialog(context: Context) : Dialog(context) {
 
     final override fun setContentView(view: View) {
         super.setContentView(view)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val width = context.resources.displayMetrics.widthPixels - AndroidUtils.dp(32f)
+        val maxHeight = context.resources.displayMetrics.heightPixels - AndroidUtils.dp(48f)
+        window?.setBackgroundDrawableResource(android.R.color.transparent)
+        window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+        window?.decorView?.post {
+            if (isShowing && (window?.decorView?.height ?: 0) > maxHeight) {
+                window?.setLayout(width, maxHeight)
+            }
+        }
     }
 }

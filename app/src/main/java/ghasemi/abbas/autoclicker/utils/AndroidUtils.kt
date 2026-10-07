@@ -18,6 +18,7 @@ import android.view.accessibility.AccessibilityManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import ghasemi.abbas.autoclicker.ui.AppDialogUi
 import androidx.core.text.TextUtilsCompat
 import com.google.android.material.snackbar.Snackbar
 import ghasemi.abbas.autoclicker.AppAccessibilityService
@@ -73,7 +74,7 @@ object AndroidUtils {
         bunRun: Runnable?,
         cancelRun: Runnable? = null
     ) {
-        AlertDialog.Builder(context)
+        AlertDialog.Builder(context, ghasemi.abbas.autoclicker.R.style.AppAlertDialog)
             .setCancelable(false)
             .setTitle(title)
             .setMessage(content)
@@ -87,7 +88,7 @@ object AndroidUtils {
                         if (cancelRun == null) null else DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> cancelRun.run() }
                     )
                 }
-                show()
+                AppDialogUi.show(create())
             }
     }
 

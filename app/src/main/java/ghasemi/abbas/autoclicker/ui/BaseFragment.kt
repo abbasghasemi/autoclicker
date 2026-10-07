@@ -22,11 +22,14 @@ open class BaseFragment() {
             root = FrameLayout(context)
             root.setBackgroundColor(Color.WHITE)
             root.isFocusable = true
+            root.isFocusableInTouchMode = true
+            root.isClickable = true
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 root.focusable = View.FOCUSABLE
             }
         }
         this.context = context
+        root.requestFocus()
     }
 
     @CallSuper

@@ -3,12 +3,41 @@
     <style name="Theme.AutoClicker" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
          <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorSecondary">@color/color_primary</item>
+        <item name="colorControlActivated">@color/color_primary</item>
+        <item name="android:colorControlActivated">@color/color_primary</item>
+        <item name="colorSurface">@android:color/white</item>
+        <item name="colorOnSurface">@android:color/black</item>
+        <item name="colorAccent">@color/color_primary</item>
+        <item name="android:colorAccent">@color/color_primary</item>
         <item name="android:dialogTheme">@style/dialogTheme</item>
-        <item name="fontFamily">@font/sans</item>
+        <item name="android:alertDialogTheme">@style/AppAlertDialog</item>
+        <item name="alertDialogTheme">@style/AppAlertDialog</item>
+        <item name="fontFamily">@font/app_font</item>
+        <item name="android:fontFamily">@font/app_font</item>
+    </style>
+
+    <style name="AppAlertDialog" parent="Theme.Material3.Light.Dialog">
+        <item name="android:windowBackground">@drawable/app_alert_background</item>
+        <item name="android:windowAnimationStyle">@style/dialogAnimation</item>
+        <item name="android:colorAccent">@color/color_primary</item>
+        <item name="colorAccent">@color/color_primary</item>
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorSecondary">@color/color_primary</item>
+        <item name="colorSurface">@android:color/white</item>
+        <item name="colorOnSurface">@android:color/black</item>
+        <item name="colorControlActivated">@color/color_primary</item>
+        <item name="android:colorControlActivated">@color/color_primary</item>
+        <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="android:textColorSecondary">#555555</item>
+        <item name="fontFamily">@font/app_font</item>
+        <item name="android:fontFamily">@font/app_font</item>
     </style>
 
     <style name="dialogTheme" parent="Theme.Material3.Light.Dialog">
         <item name="android:colorPrimary">@color/color_primary</item>
+        <item name="fontFamily">@font/app_font</item>
+        <item name="android:fontFamily">@font/app_font</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowAnimationStyle">@style/dialogAnimation</item>
     </style>

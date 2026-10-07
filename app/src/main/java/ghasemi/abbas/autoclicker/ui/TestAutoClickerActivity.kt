@@ -20,6 +20,7 @@ import ghasemi.abbas.autoclicker.utils.AndroidUtils
 import ghasemi.abbas.autoclicker.utils.AnimationUtils
 import ghasemi.abbas.autoclicker.utils.LayoutHelper
 import ghasemi.abbas.autoclicker.utils.rippleBackground
+import ghasemi.abbas.autoclicker.utils.circularRippleBackground
 
 class TestAutoClickerActivity : BaseFragment() {
     override fun onCreateView(context: Context) {
@@ -58,7 +59,8 @@ class TestAutoClickerActivity : BaseFragment() {
                 addView(
                     finishButton.apply {
                         setImageResource(R.drawable.round_arrow_back_24)
-                        background = rippleBackground(mask = ColorDrawable(Color.WHITE))
+                        background = circularRippleBackground()
+                        setPadding(AndroidUtils.dp(7f), AndroidUtils.dp(7f), AndroidUtils.dp(7f), AndroidUtils.dp(7f))
                         setOnClickListener {
                             if (!AppServiceHelper.isRunning) {
                                 finishFragment()
@@ -66,9 +68,9 @@ class TestAutoClickerActivity : BaseFragment() {
                         }
                     },
                     LayoutHelper.createFrame(
-                        32f,
-                        LayoutHelper.MATCH_PARENT,
-                        Gravity.LEFT,
+                        40f,
+                        40f,
+                        Gravity.LEFT or Gravity.CENTER_VERTICAL,
                         10f, 0f, 0f, 0f
                     )
                 )
@@ -76,7 +78,8 @@ class TestAutoClickerActivity : BaseFragment() {
                 addView(
                     AppCompatImageView(context).apply {
                         setImageResource(R.drawable.round_zoom_in_map_24)
-                        val r = AndroidUtils.dpf(16f)
+                        setPadding(AndroidUtils.dp(7f), AndroidUtils.dp(7f), AndroidUtils.dp(7f), AndroidUtils.dp(7f))
+                        val r = AndroidUtils.dpf(20f)
                         background = rippleBackground(
                             ShapeDrawable(
                                 RoundRectShape(
@@ -102,8 +105,8 @@ class TestAutoClickerActivity : BaseFragment() {
                         }
                     },
                     LayoutHelper.createFrame(
-                        32f,
-                        32f,
+                        40f,
+                        40f,
                         Gravity.RIGHT or Gravity.CENTER_VERTICAL,
                         0f, 0f, 10f, 0f
                     )

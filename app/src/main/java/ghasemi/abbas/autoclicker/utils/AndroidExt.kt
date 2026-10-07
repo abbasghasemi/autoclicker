@@ -4,6 +4,7 @@ import android.R
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.widget.EditText
 
@@ -25,3 +26,12 @@ fun rippleBackground(content: Drawable? = null, mask: Drawable? = null): Drawabl
         ), content, mask
     )
 }
+
+fun circularRippleBackground(): Drawable = RippleDrawable(
+    ColorStateList.valueOf(Color.argb(55, 0, 0, 0)),
+    null,
+    GradientDrawable().apply {
+        shape = GradientDrawable.OVAL
+        setColor(Color.WHITE)
+    }
+)

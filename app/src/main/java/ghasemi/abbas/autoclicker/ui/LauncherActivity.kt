@@ -1,6 +1,6 @@
 package ghasemi.abbas.autoclicker.ui
 
-import android.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
@@ -24,6 +24,7 @@ import android.text.InputFilter
 import android.text.InputType
 import android.text.TextWatcher
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
@@ -34,6 +35,9 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.ColorUtils
 import com.google.android.material.button.MaterialButton
@@ -46,11 +50,13 @@ import ghasemi.abbas.autoclicker.ApplicationLoader
 import ghasemi.abbas.autoclicker.BuildConfig
 import ghasemi.abbas.autoclicker.NotificationCenter
 import ghasemi.abbas.autoclicker.R
+import ghasemi.abbas.autoclicker.ScriptTransfer
 import ghasemi.abbas.autoclicker.ui.components.PointView
 import ghasemi.abbas.autoclicker.utils.AndroidUtils
 import ghasemi.abbas.autoclicker.utils.BackController
 import ghasemi.abbas.autoclicker.utils.LayoutHelper
 import ghasemi.abbas.autoclicker.utils.rippleBackground
+import ghasemi.abbas.autoclicker.utils.circularRippleBackground
 import ghasemi.abbas.autoclicker.utils.value
 
 
@@ -71,11 +77,37 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val rootView = FrameLayout(this)
         baseView = FrameLayout(this)
         baseView!!.layoutParams =
             LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT)
+        rootView.addView(baseView)
+        val statusBarBackground = View(this).apply {
+            setBackgroundColor(ResourcesCompat.getColor(resources, R.color.color_primary, theme))
+        }
+        rootView.addView(statusBarBackground, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, 0, Gravity.TOP
+        ))
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            baseView!!.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            val statusHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            if (statusBarBackground.layoutParams.height != statusHeight) {
+                statusBarBackground.layoutParams = (statusBarBackground.layoutParams as FrameLayout.LayoutParams).apply {
+                    height = statusHeight
+                }
+            }
+            insets
+        }
 
-        setContentView(baseView)
+        if (Build.VERSION.SDK_INT < 35) {
+            @Suppress("DEPRECATION")
+            window.statusBarColor = ResourcesCompat.getColor(resources, R.color.color_primary, theme)
+        }
+        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
+        setContentView(rootView)
         backController.registerOnBackInvokedCallback(this, this)
         AndroidUtils.updateTileAndWidget()
     }
@@ -124,7 +156,8 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
                 addView(
                     AppCompatImageView(this@LauncherActivity).apply {
                         setImageResource(R.drawable.round_share_24)
-                        background = rippleBackground(mask = ColorDrawable(Color.WHITE))
+                        background = circularRippleBackground()
+                        setPadding(AndroidUtils.dp(7f), AndroidUtils.dp(7f), AndroidUtils.dp(7f), AndroidUtils.dp(7f))
                         setOnClickListener {
                             val shareText =
                                 if (BuildConfig.FLAVOR == "cafebazaar") "https://cafebazaar.ir/app/" + BuildConfig.APPLICATION_ID
@@ -141,9 +174,9 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
                         }
                     },
                     LayoutHelper.createFrame(
-                        32f,
-                        LayoutHelper.MATCH_PARENT,
-                        Gravity.LEFT,
+                        40f,
+                        40f,
+                        Gravity.LEFT or Gravity.CENTER_VERTICAL,
                         10f, 0f, 0f, 0f
                     )
                 )
@@ -151,25 +184,24 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
                 addView(
                     AppCompatImageView(this@LauncherActivity).apply {
                         setImageResource(R.drawable.round_star_24)
-                        background = rippleBackground(mask = ColorDrawable(Color.WHITE))
+                        background = circularRippleBackground()
+                        setPadding(AndroidUtils.dp(7f), AndroidUtils.dp(7f), AndroidUtils.dp(7f), AndroidUtils.dp(7f))
                         setOnClickListener {
-                            val intent =
-                                Intent(if (BuildConfig.FLAVOR == "cafebazaar") Intent.ACTION_EDIT else Intent.ACTION_VIEW)
-                            intent.data = Uri.parse(
-                                if (BuildConfig.FLAVOR == "cafebazaar") "bazaar://details?id=" + BuildConfig.APPLICATION_ID
-                                else "myket://comment?id=" + BuildConfig.APPLICATION_ID
-                            )
-                            try {
-                                startActivity(intent)
-                            } catch (e: Exception) {
-                                //
-                            }
+                            dialog = RateDialog(this@LauncherActivity) {
+                                val intent = Intent(if (BuildConfig.FLAVOR == "cafebazaar")
+                                    Intent.ACTION_EDIT else Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse(if (BuildConfig.FLAVOR == "cafebazaar")
+                                        "bazaar://details?id=" + BuildConfig.APPLICATION_ID
+                                    else "myket://comment?id=" + BuildConfig.APPLICATION_ID)
+                                }
+                                try { startActivity(intent) } catch (_: Exception) { }
+                            }.also { it.show() }
                         }
                     },
                     LayoutHelper.createFrame(
-                        32f,
-                        LayoutHelper.MATCH_PARENT,
-                        Gravity.RIGHT,
+                        40f,
+                        40f,
+                        Gravity.RIGHT or Gravity.CENTER_VERTICAL,
                         0f, 0f, 10f, 0f
                     )
                 )
@@ -203,22 +235,13 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
         } else {
             requireMainLayout(linearLayout)
         }
-        baseView!!.addView(
-            ScrollView(this).apply {
-                addView(
-                    linearLayout, LayoutHelper.createScroll(
-                        LayoutHelper.MATCH_PARENT,
-                        LayoutHelper.MATCH_PARENT,
-                        Gravity.NO_GRAVITY
-                    )
-                )
-            },
-            LayoutHelper.createFrame(
-                LayoutHelper.MATCH_PARENT,
-                LayoutHelper.MATCH_PARENT,
-                Gravity.NO_GRAVITY
-            )
-        )
+        baseView!!.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(ScrollView(this@LauncherActivity).apply {
+                addView(linearLayout)
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+            addView(RecommendedAppsView(this@LauncherActivity))
+        }, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT))
     }
 
     private fun requireMainLayout(linearLayout: LinearLayout) {
@@ -452,6 +475,22 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
                     15f, 15f, 15f, 0f
                 )
             )
+
+            addView(TextInputLayout(this@LauncherActivity).apply {
+                setHint(R.string.start_delay)
+                addView(TextInputEditText(this@LauncherActivity).apply {
+                    value = AppConfig.instance().startDelaySeconds.toString()
+                    inputType = InputType.TYPE_CLASS_NUMBER
+                    filters = arrayOf(InputFilter.LengthFilter(2))
+                    addTextChangedListener(object : TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                        override fun afterTextChanged(s: Editable?) {
+                            AppConfig.instance().startDelaySeconds = s.toString().toIntOrNull() ?: 0
+                        }
+                    })
+                })
+            }, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 15f, 15f, 15f, 0f))
 
             addView(
                 LinearLayout(this@LauncherActivity).apply {
@@ -822,6 +861,45 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
                     orientation = LinearLayout.HORIZONTAL
                     addView(
                         AppCompatImageView(this@LauncherActivity).apply {
+                            setImageResource(R.drawable.round_save_as_24)
+                            setColorFilter(Color.BLACK)
+                        },
+                        LayoutHelper.createLinearRelatively(
+                            32f,
+                            32f,
+                            Gravity.CENTER_VERTICAL,
+                            0f,
+                            0f,
+                            0f,
+                            10f,
+                            0f
+                        )
+                    )
+                    addView(
+                        TextView(this@LauncherActivity).apply {
+                            setText(R.string.save_script_guide)
+                            textSize = 15f
+                            typeface = ResourcesCompat.getFont(this@LauncherActivity, R.font.sans)
+                        },
+                        LayoutHelper.createLinear(
+                            LayoutHelper.WRAP_CONTENT,
+                            LayoutHelper.WRAP_CONTENT,
+                        )
+                    )
+                },
+                LayoutHelper.createLinear(
+                    LayoutHelper.MATCH_PARENT,
+                    LayoutHelper.WRAP_CONTENT,
+                    Gravity.NO_GRAVITY,
+                    15f, 10f, 15f, 10f
+                )
+            )
+
+            addView(
+                LinearLayout(this@LauncherActivity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    addView(
+                        AppCompatImageView(this@LauncherActivity).apply {
                             setImageResource(R.drawable.round_home_24)
                             setColorFilter(Color.BLACK)
                         },
@@ -1007,9 +1085,6 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
                 )
             )
         }
-        AndroidUtils.runOnUIThread({
-            checkFragment(intent)
-        })
     }
 
     private fun requirePermissionLayout(linearLayout: LinearLayout) {
@@ -1047,6 +1122,23 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
                     15f, 0f, 15f, 15f
                 )
             )
+
+            if (!created) {
+                addView(MaterialButton(this@LauncherActivity).apply {
+                    setText(R.string.watch_tutorial)
+                    setOnClickListener {
+                        val url = getString(R.string.tutorial_video_url)
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                        } catch (_: ActivityNotFoundException) {
+                            AndroidUtils.toast(getString(R.string.link_not_ready))
+                        }
+                    }
+                }, LayoutHelper.createLinear(
+                    LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT,
+                    Gravity.CENTER_HORIZONTAL, 15f, 0f, 15f, 15f
+                ))
+            }
 
             if (availableAutoStartManagement()) {
                 addView(
@@ -1088,8 +1180,7 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
             if (isXiaomi) {
                 addView(
                     TextView(this@LauncherActivity).apply {
-                        text =
-                            "پیشنهاد می شود بهینه سازی باطری را برای جلوگیری از ایجاد اخلال در عملکرد برنامه غیرفعال کنید."
+                        setText(R.string.miui_battery_optimization_hint)
                         textSize = 16f
                         typeface = ResourcesCompat.getFont(this@LauncherActivity, R.font.sans)
                         setTextColor(Color.BLACK)
@@ -1104,7 +1195,7 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
 
                 addView(
                     MaterialButton(this@LauncherActivity).apply {
-                        setText(R.string.deactivation)
+                        setText(R.string.miui_battery_settings)
                         insetBottom = 0
                         insetTop = 0
                         setOnClickListener {
@@ -1263,6 +1354,14 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
         try {
             startActivity(intent)
         } catch (e: Exception) {
+            // MIUI/HyperOS versions do not all expose this internal activity.
+            // The app details page is the stable route to this app's battery setting.
+            try {
+                appSettings()
+                AndroidUtils.toast(getString(R.string.miui_battery_settings_guide))
+            } catch (fallbackError: Exception) {
+                AndroidUtils.toast(getString(R.string.miui_battery_settings_unavailable))
+            }
         }
     }
 
@@ -1358,7 +1457,7 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
             }
             val runnable = Runnable {
                 if ("xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)) {
-                    AlertDialog.Builder(this)
+                    AlertDialog.Builder(this, R.style.AppAlertDialog)
                         .setTitle(R.string.app_name)
                         .setMessage("در تلفن شما ممکن است تایید دسترسی، توسط سیستم اجازه داده نشود. در این صورت گزینه 'اجازه دادن به تنظیمات محدود شده' را فعال سازی کنید.")
                         .setPositiveButton(R.string.accessibility_permission) { _: DialogInterface, _: Int ->
@@ -1367,7 +1466,7 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
                         .setNegativeButton(R.string.activation) { _: DialogInterface, _: Int ->
                             appSettings()
                         }
-                        .show()
+                        .create().let { AppDialogUi.show(it) }
                 } else {
                     requestAccessibility()
                 }
@@ -1448,6 +1547,7 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
         super.onResume()
         AndroidUtils.runOnUIThread({
             createView()
+            checkFragment(intent)
         })
     }
 
@@ -1465,10 +1565,33 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        setIntent(intent)
         checkFragment(intent)
     }
 
     private fun checkFragment(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            val payload = intent.getStringExtra(Intent.EXTRA_TEXT)
+            intent.removeExtra(Intent.EXTRA_TEXT)
+            val imported = ScriptTransfer.decode(payload)
+            if (imported != null) {
+                dialog = AlertDialog.Builder(this, R.style.AppAlertDialog)
+                    .setTitle(R.string.import_script)
+                    .setMessage(getString(R.string.import_script_message,
+                        imported.name, imported.widgets.size))
+                    .setPositiveButton(R.string.import_script) { _, _ ->
+                        AppServiceHelper.saveScriptsConfig(imported)
+                        NotificationCenter.instance().postNotificationName(
+                            NotificationCenter.scriptsSaved, true,
+                            AppServiceHelper.loadScriptsConfig().indexOfFirst { it === imported })
+                        if (baseFragments.lastOrNull() !is ScriptsConfigActivity) {
+                            startFragment(ScriptsConfigActivity())
+                        }
+                    }
+                    .setNegativeButton(R.string.no, null)
+                    .create().let { AppDialogUi.show(it) }
+            }
+        }
         val fragment = intent?.getStringExtra("fragment")
         if (fragment != null) {
             if (fragment == "ScriptsConfig") {
@@ -1493,6 +1616,7 @@ class LauncherActivity : AppCompatActivity(), BackController.OnInvoke {
                 LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT)
             else baseFragment.root.layoutParams
         )
+        baseFragment.root.requestFocus()
     }
 
     fun closeLastFragment() {

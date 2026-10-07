@@ -3,12 +3,34 @@
     <string name="accessibility_service_description">The Auto Clicker app requires Accessibility service permission for clicking and swiping functionality.</string>
     <string name="points_is_empty">حداقل یک ویجت اضافه کنید</string>
     <string name="save">ذخیره</string>
+    <string name="save_script_guide">برای ذخیرهٔ اسکریپت، در پنجرهٔ شناور آیکن ذخیره را بزنید، نام و تنظیمات را انتخاب کنید و سپس «ذخیره» را لمس کنید. اسکریپت ذخیره‌شده در بخش «اسکریپت‌ها» در دسترس است.</string>
+    <string name="choose_target_app">برنامهٔ مقصد: %1$s</string>
+    <string name="choose_target_app_title">انتخاب برنامهٔ مقصد</string>
+    <string name="clear_target_app">پاک کردن برنامهٔ مقصد</string>
+    <string name="no_target_app">بدون برنامهٔ مقصد</string>
+    <string name="on_leave_title">وقتی از برنامهٔ مقصد خارج می‌شوم:</string>
+    <string-array name="on_leave_actions">
+        <item>بدون محدودیت</item>
+        <item>مکث تا بازگشت به برنامه</item>
+        <item>توقف اجرا</item>
+    </string-array>
+    <string name="test_step">آزمایش این مرحله</string>
+    <string name="test_step_needs_app">برای آزمایش، ابتدا برنامهٔ مقصد را در ویرایش اسکریپت انتخاب کنید.</string>
+    <string name="test_step_unavailable">برنامهٔ مقصد باز نشد.</string>
+    <string name="test_step_running">ابتدا اجرای فعلی را متوقف کنید.</string>
+    <string name="test_step_countdown">آزمایش مرحله تا ۳ ثانیهٔ دیگر اجرا می‌شود.</string>
+    <string name="rate_prompt">برای حمایت از برنامه امتیاز دهید</string>
+    <string name="submit_rating">ثبت</string>
     <string name="click_time">زمان بین هر ویجت</string>
     <string name="swipe_time">زمان کشیده شدن بین دو نقطه</string>
     <string name="start_activity">شروع فعالیت</string>
     <string name="end_activity">توقف فعالیت</string>
     <string name="activation">فعال سازی</string>
     <string name="deactivation">غیرفعال سازی</string>
+    <string name="miui_battery_settings">تنظیمات باتری برنامه</string>
+    <string name="miui_battery_optimization_hint">برای جلوگیری از توقف برنامه در پس‌زمینه، تنظیمات باتری آن را باز کنید و گزینهٔ «بدون محدودیت» را انتخاب کنید.</string>
+    <string name="miui_battery_settings_guide">در تنظیمات برنامه، «باتری» را باز کنید و «بدون محدودیت» را انتخاب کنید.</string>
+    <string name="miui_battery_settings_unavailable">صفحهٔ تنظیمات باتری باز نشد. از تنظیمات گوشی، برنامه‌ها و سپس Auto Clicker را باز کنید.</string>
     <string name="app_settings">تنظیمات برنامه</string>
     <string name="permission_confirmation">تایید دسترسی</string>
     <string name="accessibility_permission">مجوز Accessibility Service</string>
@@ -32,4 +54,51 @@
     <string name="version">نسخه %1$s</string>
     <string name="diagnosis">عیب یابی</string>
     <string name="allow_activity_in_background">اجازه فعالیت در پسزمینه</string>
+    <string name="tutorial_video_url" translatable="false">https://www.aparat.com/v/dydn7j8</string>
+    <string name="recommended_apps">برنامه‌های دیگر</string>
+    <string name="show_recommended_apps">نمایش برنامه‌های دیگر</string>
+    <string name="hide_recommended_apps">بستن برنامه‌های دیگر</string>
+    <string name="watch_tutorial">مشاهده آموزش ویدیویی</string>
+    <string name="link_not_ready">لینک هنوز تنظیم نشده است</string>
+    <string name="start_delay">شمارش معکوس شروع (ثانیه، صفر = بدون تأخیر)</string>
+    <string name="stop_now">توقف فوری</string>
+    <string name="relative_coordinates">تطبیق مختصات با اندازه صفحه</string>
+    <string name="step_enabled">مرحله فعال باشد</string>
+    <string name="edit_steps">مراحل</string>
+    <string name="edit_script_action">ویرایش اسکریپت</string>
+    <string name="delete_script_action">حذف اسکریپت</string>
+    <string name="run_script_action">اجرای اسکریپت</string>
+    <string name="no_script_steps">این اسکریپت مرحله‌ای ندارد. برای افزودن مرحله، آن را اجرا کنید و از ابزار شناور نقطه یا حرکت اضافه کنید.</string>
+    <string name="share_script">اشتراک‌گذاری اسکریپت</string>
+    <string name="import_script">وارد کردن اسکریپت</string>
+    <string name="add_script">افزودن اسکریپت</string>
+    <string name="add_script_button">+ اسکریپت جدید</string>
+    <string name="import_script_button">وارد کردن</string>
+    <string name="start_new_script_message">برای ساخت اسکریپت جدید، ابزار شناور فعلی بسته می‌شود. تغییرات ذخیره‌نشده از بین می‌روند. ادامه می‌دهید؟</string>
+    <string name="paste_script">جای‌گذاری کد اسکریپت</string>
+    <string name="script_code_hint">کد اسکریپت اشتراک‌گذاری‌شده</string>
+    <string name="invalid_script_code">کد اسکریپت معتبر نیست.</string>
+    <string name="import_script_message">اسکریپت «%1$s» با %2$d مرحله به برنامه اضافه شود؟</string>
+    <string name="share_script_failed">اشتراک‌گذاری اسکریپت انجام نشد.</string>
+    <string name="step_editor_hint">برای ویرایش هر مرحله «تنظیم شرط و حرکت» را بزنید. دکمه‌های جابه‌جایی ترتیب اجرا را تغییر می‌دهند.</string>
+    <string name="step_settings">تنظیم شرط و حرکت</string>
+    <string name="gesture_mode">نوع حرکت</string>
+    <string name="curve_amount">میزان خمیدگی مسیر</string>
+    <string name="cancel">انصراف</string>
+    <string name="close">بستن</string>
+    <string name="duplicate_step">تکثیر</string>
+    <string name="move_up">بالا</string>
+    <string name="move_down">پایین</string>
+    <string name="disable_step">غیرفعال</string>
+    <string name="enable_step">فعال</string>
+    <string name="wait_for_text">قبل از اجرا منتظر متن بمان (خالی = بدون شرط)</string>
+    <string name="wait_timeout">حداکثر انتظار (ثانیه، صفر = نامحدود)</string>
+    <string name="waypoints_hint">نقاط میانی به درصد صفحه، نمونه: 25,40;70,55</string>
+    <string-array name="gesture_modes">
+        <item>سوایپ مستقیم</item>
+        <item>مسیر خمیده</item>
+        <item>دو انگشتی: نزدیک کردن</item>
+        <item>دو انگشتی: دور کردن</item>
+        <item>مسیر چندنقطه‌ای</item>
+    </string-array>
 </resources>
